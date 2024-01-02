@@ -1,4 +1,4 @@
-#训练集shap
+#training set
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -20,7 +20,7 @@ X_train = pd.DataFrame(X_train, columns=col_xcg).reset_index(drop=True)
 from imblearn.over_sampling import SMOTE
 smote = SMOTE(random_state=42)
 X_train, y_train = smote.fit_resample(X_train, y_train)
-#导入模型
+
 #import pickle
 Pkl_Filename = "save/SR1_xgb_xcg_model.pkl"  
 with open(Pkl_Filename, 'rb') as file:  
@@ -34,9 +34,9 @@ explainer = shap.TreeExplainer(xgboost_final_xcg)
 shap_values = explainer.shap_values(X_train)
 ########
 
-# 绘制 SHAP 单个样本
+# Plot SHAP for a single sample
 shap.force_plot(explainer.expected_value, shap_values[0,:], X_train.iloc[0,:], matplotlib=True)
-# 交互作用的依赖性图
+# Plot the dependency graph for interactions
 shap.dependence_plot('SIRI', shap_values, X_train, interaction_index='PLT')
 shap.dependence_plot('SIRI', shap_values, X_train, interaction_index='HCT')
 shap.dependence_plot('RDW_CV', shap_values, X_train, interaction_index='HCT')
@@ -48,35 +48,27 @@ plt.savefig("shap_summary_plot.pdf", format='pdf', bbox_inches='tight')
 ######################################
 import matplotlib.pyplot as plt
 import shap
-
-# 生成 SHAP plots
 shap.summary_plot(shap_values, X_train)
-
-# 获取当前图形 (gcf: get current figure)
+ (gcf: get current figure)
 fig = plt.gcf()
 
-# 获取当前的坐标轴 (gca: get current axis)
+# (gca: get current axis)
 ax = plt.gca()
 
-# 设置坐标轴标签的字体
 for label in ax.get_xticklabels():
     label.set_fontname('Times New Roman')
     label.set_fontsize(16)
 for label in ax.get_yticklabels():
     label.set_fontname('Times New Roman')
     label.set_fontsize(16)
-
-# 保存图形为 PDF
 plt.savefig("shap_summary_plot.pdf", format='pdf', bbox_inches='tight')
-
-# 关闭图形，释放内存
 plt.close(fig)
 #####################################
-# 计算交互影响值
+# Calculate interaction impact shap values
 shap_interaction_values = explainer.shap_interaction_values(X_train)
 
-# 绘制交互影响图
-# 这里我们选择 'SIRI' 和 'HCT' 两个特征作为示例
+# Plot interaction impact graphs
+# Here, we select 'SIRI' and 'HCT' as examples of two features"
 shap.dependence_plot(
     ("SIRI", "HCT"), 
     shap_interaction_values, 
@@ -87,10 +79,10 @@ shap.dependence_plot(
 
 import itertools
 
-# 获取所有特征的两两组合
+# Obtain pairwise combinations of all features
 feature_pairs = list(itertools.combinations(col_xcg, 2))
 
-# 对每对特征，绘制它们的交互效应图
+# For each pair of features, plot their interaction effect graphs
 fig, axs = plt.subplots(len(feature_pairs)//2, 2, figsize=(15, len(feature_pairs)*5))
 for ax, (feature1, feature2) in zip(axs.flatten(), feature_pairs):
     shap.dependence_plot(
@@ -104,21 +96,20 @@ for ax, (feature1, feature2) in zip(axs.flatten(), feature_pairs):
 plt.tight_layout()
 plt.show()
 
-######生存两两交互，保存到一个文件夹
+
 import itertools
 import os
 import matplotlib
 
-# 创建保存图像的文件夹
 if not os.path.exists('interaction_plots'):
     os.makedirs('interaction_plots')
 
 matplotlib.rcParams['font.family'] = 'Times New Roman'
 
-# 获取所有特征的两两组合
+
 feature_pairs = list(itertools.combinations(col_xcg, 2))
 
-# 对每对特征，绘制它们的交互效应图
+
 for feature1, feature2 in feature_pairs:
     shap.dependence_plot(
         (feature1, feature2),
@@ -127,7 +118,7 @@ for feature1, feature2 in feature_pairs:
     )
     plt.title(f'Interaction between {feature1} and {feature2}', fontsize=16)
 
-    # 更改x轴和y轴的刻度字体大小
+   
     plt.xticks(fontsize=16)
     plt.yticks(fontsize=16)
     
@@ -139,7 +130,7 @@ shap.summary_plot(shap_interaction_values, X_train, plot_type="compact_dot")
 ##################################################
 ################################
 ##########################
-#所有变量的敏感性分析，随即抽取100个样本，50正例，50负例
+#Randomly extract 100 samples, 50 positive and 50 negative cases
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -153,94 +144,88 @@ col_xcg = ['SIRI', 'HCT', 'RDW_CV', 'PLT', 'BAS_p', 'IG_p', 'EOS']
 X_train = pd.read_csv('X_train.csv')[col_xcg]
 y_train = pd.read_csv('y_train.csv')
 
-# 加载模型和标准化器
+
 with open('robust_scaler.pkl', 'rb') as file:
     scaler = pickle.load(file)
 
 with open("save/SR1_xgb_xcg_model.pkl", 'rb') as file:  
     xgboost_final_xcg = pickle.load(file)
 
-# 创建不同类别的数据集
+
 df_class_0 = X_train[y_train.iloc[:, 0] == 0]
 df_class_1 = X_train[y_train.iloc[:, 0] == 1]
 
-# 随机抽取50个样本
 df_class_0_sample = resample(df_class_0, replace=False, n_samples=50, random_state=142)
 df_class_1_sample = resample(df_class_1, replace=False, n_samples=50, random_state=142)
 
-# 创建保存图像的文件夹
+
 if not os.path.exists('sensitive_analysis'):
     os.makedirs('sensitive_analysis')
 
-# 针对每个特征
+
 for feature in col_xcg:
     plt.figure(figsize=(10, 6))
 
-    # 对于类别 0 的样本
     for i in range(df_class_0_sample.shape[0]):
-        # 选择一个样本
+ 
         sample = df_class_0_sample.iloc[i].copy().to_frame().T
 
-        # 获取训练集中该特征的最小值和最大值
+   
         min_value = X_train[feature].min()
         max_value = X_train[feature].max()
 
-        # 生成最小值到最大值之间的一组值
         values = np.linspace(min_value, max_value, 100)
 
-        # 创建一个列表，用于存储预测结果
         predictions = []
 
-        # 对于这组值中的每一个值
+      
         for value in values:
-            # 设置样本中该特征的值为当前值
+   
             sample[feature] = value
 
-            # 标准化数据
+  
             sample_scaled = pd.DataFrame(scaler.transform(sample), columns=sample.columns)
 
-            # 计算预测结果，并添加到列表中
             predictions.append(xgboost_final_xcg.predict_proba(sample_scaled)[0, 1])
 
-        # 绘制类别 0 样本的预测结果
         plt.plot(values, predictions, color='blue', alpha=0.5)
 
-    # 对于类别 1 的样本
+
     for i in range(df_class_1_sample.shape[0]):
-        # 选择一个样本
+      
         sample = df_class_1_sample.iloc[i].copy().to_frame().T
 
-        # 获取训练集中该特征的最小值和最大值
+     
         min_value = X_train[feature].min()
         max_value = X_train[feature].max()
 
-        # 生成最小值到最大值之间的一组值
+  
         values = np.linspace(min_value, max_value, 100)
 
-        # 创建一个列表，用于存储预测结果
+     
         predictions = []
 
-        # 对于这组值中的每一个值
+ 
         for value in values:
-            # 设置样本中该特征的值为当前值
+        
             sample[feature] = value
 
-            # 标准化数据
+     
             sample_scaled = pd.DataFrame(scaler.transform(sample), columns=sample.columns)
 
-            # 计算预测结果，并添加到列表中
+          
             predictions.append(xgboost_final_xcg.predict_proba(sample_scaled)[0, 1])
 
-        # 绘制类别 1 样本的预测结果
+      
         plt.plot(values, predictions, color='red', alpha=0.5)
 
-    # 添加图例和标签
+
     plt.legend(['No AIS', 'AIS'])
     plt.xlabel(feature)
     plt.ylabel('Prediction')
     plt.title(f'Impact of {feature} on Prediction')
     
-    # 保存图像为 PDF 格式
+  
     plt.savefig(f'sensitive_analysis/{feature}_impact.pdf', dpi=300)
 
     plt.close()
@@ -248,10 +233,10 @@ for feature in col_xcg:
 
 
 
-#全局敏感性分析
+#Global sensitivity analysis
 
 
-######类别平衡处理和对应的敏感性分析
+
 import pandas as pd
 import numpy as np
 import seaborn as sns
