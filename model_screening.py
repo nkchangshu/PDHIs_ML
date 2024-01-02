@@ -1,4 +1,4 @@
-#首先进行数据处理
+#Import Data
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -9,7 +9,7 @@ import matplotlib as mpl
 os.chdir(r'/home/changshu/python2022/huanhu_data/hypertension_final_code')
 
 df_combined = pd.read_csv('df_combined.csv')
-#进行数据集的划分
+#Splitting the Dataset
 
 from sklearn.model_selection import train_test_split
 
@@ -35,7 +35,7 @@ y_val.to_csv('y_val.csv', index=False)
 X_test.to_csv('X_test.csv', index=False)
 y_test.to_csv('y_test.csv', index=False)
 X_train.isna().sum()
-#################整个模型初筛的过程
+#################Initial Screening Process of Models
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -63,14 +63,14 @@ from sklearn.linear_model import SGDClassifier
 from sklearn.ensemble import HistGradientBoostingClassifier
 from sklearn.preprocessing import LabelEncoder
 from sklearn.svm import SVC, LinearSVC, NuSVC
-#########################XGB-PDHIs,仅包含特征选择后的PDHIs
+#########################XGB-PDHIs,Only includes PDHIs after feature selection
 os.chdir(r'/home/changshu/python2022/huanhu_data/hypertension_final_code')
 col_xcg = ['SIRI', 'HCT', 'RDW_CV', 'PLT', 'BAS_p', 'IG_p', 'EOS']
 
 X_train = pd.read_csv('X_train.csv')[col_xcg]
 X_val = pd.read_csv('X_val.csv')[col_xcg]
 
-#训练集smote
+#training data smote
 from sklearn.preprocessing import RobustScaler
 scaler = RobustScaler()
 X_train=scaler.fit_transform(X_train)
@@ -81,7 +81,7 @@ from imblearn.over_sampling import SMOTE
 smote = SMOTE(random_state=2022)
 X_train, y_train = smote.fit_resample(X_train, y_train)
 
-#测试集不进行smote
+#Do not apply SMOTE to the validation set
 X_val=scaler.transform(X_val)
 X_val = pd.DataFrame(X_val).reset_index(drop= True)
 X_val.columns = X_train.columns
@@ -90,7 +90,7 @@ from collections import Counter
 counter = Counter(y_val)
 print(counter)
 
-#拟合model using RBT-derived and feature-selected variables
+#fit model using RBT-derived and feature-selected variables
 
 from sklearn.metrics import average_precision_score
 from sklearn.metrics import balanced_accuracy_score
@@ -176,7 +176,7 @@ a = score_summary(names, classifiers).sort_values(by='Bal_Accuracy' , ascending 
 
 with open("primary_models_xcg.html", "w") as file:
     file.write(a)
-# #############XGB-Mixed，同时包含进行变量选择后的分类变量
+# #############XGB-Mixed，Also includes categorical variables after variable selection
 
 col_cat = ['diabetes', 'pneum', 'heart', 'sex',
        'smoke', 'drink','age_cat']
@@ -187,7 +187,7 @@ X_train = pd.read_csv('X_train.csv')[col]
 X_val = pd.read_csv('X_val.csv')[col]
 y_train = pd.read_csv('y_train.csv').squeeze()
 y_val = pd.read_csv('y_val.csv').squeeze()
-#先处理数值型变量
+
 df_num1 = X_train[col_xcg]
 df_num1.info()
 df_num1.isna().sum()
@@ -199,7 +199,7 @@ X
 df_num_train = pd.DataFrame(X).reset_index(drop= True)
 df_num_train.columns = df_num1.columns
 ##
-#list取差集
+
 df_ret = X_train[col_cat].reset_index(drop = True)
 #df_stroke_new = pd.concat([df_stroke_numeric,df_stroke_categorical],axis = 1)
 X_train = pd.concat([df_num_train,df_ret],axis = 1)
@@ -212,13 +212,13 @@ X_train, y_train = smote.fit_resample(X_train, y_train)
 from collections import Counter
 counter = Counter(y_train)
 print(counter)
-############测试集
+############validation set
 df_num1 = X_val[col_xcg]
-######进行和训练集一样的标准化
+######Apply the same standardization as the training set
 X1=scaler.transform(df_num1)
 df_num_val = pd.DataFrame(X1).reset_index(drop= True)
 df_num_val.columns = col_xcg
-#list取差集
+
 df_ret = X_val[col_cat].reset_index(drop = True)
 X_val = pd.concat([df_num_val,df_ret],axis = 1)
 
@@ -311,7 +311,7 @@ a = score_summary(names, classifiers).sort_values(by='Bal_Accuracy' , ascending 
 with open("primary_models_cat+xcg.html", "w") as file:
     file.write(a)
 
-############XGB-All,所有变量
+############XGB-All,all variables
 col = ['WBC', 'NEU', 'LYM', 'MON', 'EOS', 'BAS', 'RBC',
        'HGB', 'HCT', 'MCV', 'MCH', 'MCHC', 'RDW_SD', 'RDW_CV', 'PLT', 'PCT',
        'MPV', 'PDW', 'P_LCR', 'IG', 'IG_p', 'NEUT', 'NEUT_p', 'NLR', 'LMR',
@@ -328,7 +328,7 @@ X_train = pd.read_csv('X_train.csv')[col]
 X_val = pd.read_csv('X_val.csv')[col]
 y_train = pd.read_csv('y_train.csv').squeeze()
 y_val = pd.read_csv('y_val.csv').squeeze()
-#先处理数值型变量
+
 df_num1 = X_train[col_xcg]
 df_num1.info()
 df_num1.isna().sum()
@@ -340,7 +340,7 @@ X
 df_num_train = pd.DataFrame(X).reset_index(drop= True)
 df_num_train.columns = df_num1.columns
 ##
-#list取差集
+
 df_ret = X_train[col_cat].reset_index(drop = True)
 #df_stroke_new = pd.concat([df_stroke_numeric,df_stroke_categorical],axis = 1)
 X_train = pd.concat([df_num_train,df_ret],axis = 1)
@@ -353,13 +353,13 @@ X_train, y_train = smote.fit_resample(X_train, y_train)
 from collections import Counter
 counter = Counter(y_train)
 print(counter)
-############测试集
+############validation set
 df_num1 = X_val[col_xcg]
-######进行和训练集一样的标准化
+
 X1=scaler.transform(df_num1)
 df_num_val = pd.DataFrame(X1).reset_index(drop= True)
 df_num_val.columns = col_xcg
-#list取差集
+
 df_ret = X_val[col_cat].reset_index(drop = True)
 X_val = pd.concat([df_num_val,df_ret],axis = 1)
 
@@ -452,7 +452,7 @@ a = score_summary(names, classifiers).sort_values(by='Bal_Accuracy' , ascending 
 with open("primary_models_all.html", "w") as file:
     file.write(a)
 
-###########只包含分类变量
+###########Only includes selected categorical variables
 import pandas as pd
 import numpy as np
 import seaborn as sns
@@ -468,7 +468,7 @@ X_train = pd.read_csv('X_train.csv')[col]
 X_val = pd.read_csv('X_val.csv')[col]
 y_train = pd.read_csv('y_train.csv').squeeze()
 y_val = pd.read_csv('y_val.csv').squeeze()
-#先处理分类变量
+
 #https://imbalanced-learn.org/stable/references/generated/imblearn.over_sampling.SMOTEN.html
 from imblearn.over_sampling import SMOTEN
 # 
@@ -478,7 +478,6 @@ from collections import Counter
 counter = Counter(y_train)
 print(counter)
 
-############测试集没有特殊处理
 
 from collections import Counter
 counter = Counter(y_val)
